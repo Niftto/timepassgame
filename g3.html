@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spicy Tic-Tac-Toe</title>
+    <style>
+body {
+      opacity: 0;
+      animation: fadeIn 1.5s ease-in forwards;
+    }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+      }
+    }
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #FF7043;
+            font-family: 'Arial', sans-serif;
+            flex-direction: column;
+            color: white;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-size: 32px;
+            text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.7);
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 5px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .cell {
+            width: 100px;
+            height: 100px;
+            background-color: #FF5722;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .cell:hover {
+            background-color: #FF8A65;
+        }
+
+        .score-board {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .game-over {
+            font-size: 28px;
+            color: yellow;
+            font-weight: bold;
+            margin-top: 30px;
+        }
+
+        button {
+            background-color: #0288d1;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        button:hover {
+            background-color: #0277bd;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>Spicy Tic-Tac-Toe</h1>
+
+    <div class="score-board">
+        <span id="current-player">Current Player: 🌶️ Red Chilli</span>
+    </div>
+
+    <div class="board" id="board">
+        <!-- 9 cells for the Tic-Tac-Toe game -->
+        <div class="cell" id="cell-0"></div>
+        <div class="cell" id="cell-1"></div>
+        <div class="cell" id="cell-2"></div>
+        <div class="cell" id="cell-3"></div>
+        <div class="cell" id="cell-4"></div>
+        <div class="cell" id="cell-5"></div>
+        <div class="cell" id="cell-6"></div>
+        <div class="cell" id="cell-7"></div>
+        <div class="cell" id="cell-8"></div>
+    </div>
+
+    <div class="game-over" id="game-over" style="display:none;">Game Over! 🌶️ Winner: </div>
+    <button onclick="startNewGame()" id="restart-btn" style="display:none;">Play Again</button>
+
+    <script>
+        let currentPlayer = '🌶️ Red Chilli'; // Player 1: Red Chilli
+        let gameBoard = ['', '', '', '', '', '', '', '', '']; // Board setup (9 cells)
+        let gameActive = true; // Game is active initially
+        let gameOverElement = document.getElementById('game-over');
+        let currentPlayerDisplay = document.getElementById('current-player');
+        let restartBtn = document.getElementById('restart-btn');
+        let board = document.getElementById('board');
+        let cells = document.getElementsByClassName('cell');
+
+        const winningCombination = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // horizontal
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // vertical
+            [0, 4, 8], [2, 4, 6] // diagonal
+        ];
+
+        // Cell click handler for player
+        function handleCellClick(cellIndex) {
+            if (!gameActive || gameBoard[cellIndex] !== '' || currentPlayer === '🌶️ Blue Dot') return; // Ignore if cell is already occupied or computer's turn
+
+            // Update the game board for player (Red Chilli)
+            gameBoard[cellIndex] = 'R'; // R for Red
+            cells[cellIndex].textContent = '🌶️'; // Show Red Chilli emoji
+
+            // Check for winner or draw
+            checkGameStatus();
+            // Switch to computer's turn
+            currentPlayer = '🌶️ Blue Dot';
+            currentPlayerDisplay.textContent = 'Current Player: 🌶️ Blue Dot';
+            computerPlay(); // Computer's move
+        }
+
+        // Check the game status
+        function checkGameStatus() {
+            // Check for win
+            for (let i = 0; i < winningCombination.length; i++) {
+                const [a, b, c] = winningCombination[i];
+                if (gameBoard[a] && gameBoard[a] === gameBoard[b] && gameBoard[a] === gameBoard[c]) {
+                    gameActive = false;
+                    gameOverElement.textContent = `Game Over! 🌶️ Winner: ${currentPlayer === '🌶️ Red Chilli' ? 'Red Chilli' : 'Blue Dot'}`;
+                    gameOverElement.style.display = 'block';
+                    restartBtn.style.display = 'block'; // Show play again button
+                    return;
+                }
+            }
+
+            // Check for draw
+            if (!gameBoard.includes('')) {
+                gameActive = false;
+                gameOverElement.textContent = 'Game Over! 🌶️ It\'s a Draw!';
+                gameOverElement.style.display = 'block';
+                restartBtn.style.display = 'block';
+            }
+        }
+
+        // Computer's move (Blue Dot)
+        function computerPlay() {
+            if (!gameActive) return;
+
+            // Let the computer choose an empty spot at random
+            let availableCells = [];
+            for (let i = 0; i < gameBoard.length; i++) {
+                if (gameBoard[i] === '') {
+                    availableCells.push(i);
+                }
+            }
+
+            // Randomly pick an available cell
+            const randomCell = availableCells[Math.floor(Math.random() * availableCells.length)];
+            gameBoard[randomCell] = 'B'; // B for Blue Dot
+            cells[randomCell].textContent = '🔵'; // Show Blue Dot emoji
+
+            // Check for winner or draw after the computer's move
+            checkGameStatus();
+            // Switch back to player's turn
+            currentPlayer = '🌶️ Red Chilli';
+            currentPlayerDisplay.textContent = 'Current Player: 🌶️ Red Chilli';
+        }
+
+        // Start a new game
+        function startNewGame() {
+            // Reset variables
+            gameBoard = ['', '', '', '', '', '', '', '', ''];
+            gameActive = true;
+            currentPlayer = '🌶️ Red Chilli';
+            currentPlayerDisplay.textContent = 'Current Player: 🌶️ Red Chilli';
+            gameOverElement.style.display = 'none';
+            restartBtn.style.display = 'none';
+
+            // Clear all cells
+            for (let i = 0; i < cells.length; i++) {
+                cells[i].textContent = '';
+            }
+        }
+
+        // Add event listeners to each cell for player clicks
+        for (let i = 0; i < cells.length; i++) {
+            cells[i].addEventListener('click', () => handleCellClick(i));
+        }
+    </script>
+
+</body>
+</html>

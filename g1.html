@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spicy Memory Match Game</title>
+    <style>
+body {
+      opacity: 0;
+      animation: fadeIn 1.5s ease-in forwards;
+    }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+      }
+    }
+        body {
+            background-color: #ff7043;
+            color: white;
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 32px;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .card {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            background-color: #f44336;
+            color: transparent;
+            font-size: 32px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: transform 0.3s ease;
+        }
+
+        .card.flipped {
+            background-color: #ffeb3b;
+            color: black;
+            transform: scale(1.1);
+        }
+
+        #result {
+            font-size: 24px;
+            margin-top: 20px;
+        }
+
+        .confetti {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 25px;
+            color: #ff5722;
+            animation: fall 2s ease-out forwards;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-10%); opacity: 1; }
+            100% { transform: translateY(100%); opacity: 0; }
+        }
+
+        .button {
+            background-color: #e91e63;
+            color: white;
+            font-size: 20px;
+            padding: 10px 20px;
+            margin: 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: #d81b60;
+        }
+
+        a {
+            text-decoration: none;
+            color: white;
+        }
+
+        .back-button {
+            font-size: 18px;
+            background-color: #ff5722;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+
+        .back-button:hover {
+            background-color: #d84315;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Spicy Memory Match Game</h1>
+    <div class="grid" id="grid"></div>
+    <div id="result"></div>
+    <button class="button" id="play-again-button" style="display: none;" onclick="restartGame()">Play Again</button>
+    <a href="https://www.example.com"><button class="back-button">Go Back</button></a>
+
+    <script>
+        // 14 emojis (7 pairs) + 1 duplicate to make 15
+        const cards = ['🌶️','🍒','🍋','🥑','🔥','🍕','🍔',
+                       '🌶️','🍒','🍋','🥑','🔥','🍕','🍔','🍣'];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let lockBoard = false;
+
+        function createBoard() {
+            const grid = document.getElementById('grid');
+            cards.sort(() => Math.random() - 0.5);
+
+            for (let i = 0; i < cards.length; i++) {
+                const cardElement = document.createElement('div');
+                cardElement.classList.add('card');
+                cardElement.dataset.cardValue = cards[i];
+                cardElement.addEventListener('click', flipCard);
+                grid.appendChild(cardElement);
+            }
+        }
+
+        function flipCard() {
+            if (lockBoard || this.classList.contains('flipped')) return;
+
+            this.classList.add('flipped');
+            this.innerText = this.dataset.cardValue;
+            flippedCards.push(this);
+
+            if (flippedCards.length === 2) {
+                checkForMatch();
+            }
+        }
+
+        function checkForMatch() {
+            lockBoard = true;
+            const [card1, card2] = flippedCards;
+
+            if (card1.dataset.cardValue === card2.dataset.cardValue) {
+                matchedPairs++;
+                flippedCards = [];
+                lockBoard = false;
+                if (matchedPairs === Math.floor(cards.length / 2)) {
+                    document.getElementById('result').innerText = 'You Win!';
+                    document.getElementById('play-again-button').style.display = 'inline-block';
+                    showConfetti();
+                }
+            } else {
+                setTimeout(() => {
+                    card1.classList.remove('flipped');
+                    card2.classList.remove('flipped');
+                    card1.innerText = '';
+                    card2.innerText = '';
+                    flippedCards = [];
+                    lockBoard = false;
+                }, 1000);
+            }
+        }
+
+        function showConfetti() {
+            for (let i = 0; i < 30; i++) {
+                let confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                confetti.style.left = `${Math.random() * 100}%`;
+                document.body.appendChild(confetti);
+                setTimeout(() => confetti.remove(), 2000);
+            }
+        }
+
+        function restartGame() {
+            matchedPairs = 0;
+            flippedCards = [];
+            document.getElementById('result').innerText = '';
+            document.getElementById('play-again-button').style.display = 'none';
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+            createBoard();
+        }
+
+        createBoard();
+    </script>
+
+</body>
+</html>

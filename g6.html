@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chili Flappy Bird Game</title>
+  <style>
+body {
+      opacity: 0;
+      animation: fadeIn 1.5s ease-in forwards;
+    }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+      }
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #FF5722;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    canvas {
+      background-color: #87CEEB;
+      display: block;
+      border: 2px solid #000;
+    }
+    #score, #topScore {
+      position: absolute;
+      top: 20px;
+      font-size: 30px;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+    #score {
+      left: 20px;  /* Keep the score at the left */
+    }
+    #topScore {
+      left: 150px; /* Adjusted position for top score */
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas"></canvas>
+  <div id="score">Score: 0</div>
+  <div id="topScore">Top Score: 0</div>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const scoreDisplay = document.getElementById("score");
+    const topScoreDisplay = document.getElementById("topScore");
+
+    // Mobile canvas size (responsive)
+    const canvasWidth = window.innerWidth * 0.9;
+    const canvasHeight = window.innerHeight * 0.8;
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+
+    let chiliY = canvasHeight / 2;
+    let velocity = 0;
+    let gravity = 0.18;  // Slower fall
+    let lift = -5.5;     // Better jump strength
+    let pipes = [];
+    let pipeWidth = 60;
+    let gapHeight = 160;
+    let pipeFrequency = 200; // More time between pipes
+    let frameCount = 0;
+    let score = 0;
+    let gameOver = false;
+
+    const chiliWidth = 20;
+    const chiliHeight = 20;
+    const chiliX = 50;
+
+    let topScore = localStorage.getItem("topScore") || 0;  // Get stored top score
+
+    function Pipe(x, y) {
+      this.x = x;
+      this.y = y;
+      this.width = pipeWidth;
+      this.height = canvasHeight;
+      this.passed = false;
+    }
+
+    function drawChili() {
+      ctx.font = "30px Arial";
+      ctx.fillText("🌶️", chiliX, chiliY);
+    }
+
+    function drawPipes() {
+      pipes.forEach(pipe => {
+        ctx.fillStyle = "#388E3C";
+        ctx.fillRect(pipe.x, 0, pipe.width, pipe.y);
+        ctx.fillRect(pipe.x, pipe.y + gapHeight, pipe.width, pipe.height - pipe.y - gapHeight);
+      });
+    }
+
+    function checkCollision() {
+      for (let i = 0; i < pipes.length; i++) {
+        let pipe = pipes[i];
+        if (chiliX + chiliWidth > pipe.x && chiliX < pipe.x + pipe.width) {
+          if (chiliY < pipe.y || chiliY + chiliHeight > pipe.y + gapHeight) {
+            gameOver = true;
+            return;
+          }
+        }
+      }
+    }
+
+    function update() {
+      if (gameOver) {
+        if (score > topScore) {
+          topScore = score;  // Update top score
+          localStorage.setItem("topScore", topScore);  // Save to localStorage
+        }
+        scoreDisplay.textContent = "Score: " + score;
+        topScoreDisplay.textContent = "Top Score: " + topScore;
+        return;
+      }
+
+      chiliY += velocity;
+      velocity += gravity;
+
+      if (chiliY + chiliHeight > canvasHeight || chiliY < 0) {
+        gameOver = true;
+        scoreDisplay.textContent = "Score: " + score;
+        topScoreDisplay.textContent = "Top Score: " + topScore;
+        return;
+      }
+
+      if (frameCount % pipeFrequency === 0) {
+        let pipeHeight = Math.floor(Math.random() * (canvasHeight - gapHeight));
+        pipes.push(new Pipe(canvasWidth, pipeHeight));
+      }
+
+      pipes.forEach(pipe => {
+        pipe.x -= 0.8; // slower movement
+        if (!pipe.passed && pipe.x < chiliX) {
+          score++;
+          pipe.passed = true;
+        }
+      });
+
+      pipes = pipes.filter(pipe => pipe.x + pipe.width > 0);
+
+      checkCollision();
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawChili();
+      drawPipes();
+      scoreDisplay.textContent = "Score: " + score;
+      topScoreDisplay.textContent = "Top Score: " + topScore;
+
+      frameCount++;
+      requestAnimationFrame(update);
+    }
+
+    canvas.addEventListener("click", () => {
+      if (gameOver) {
+        resetGame();
+      } else {
+        velocity = lift;
+      }
+    });
+
+    function resetGame() {
+      chiliY = canvasHeight / 2;
+      velocity = 0;
+      pipes = [];
+      frameCount = 0;
+      score = 0;
+      gameOver = false;
+      update();
+    }
+
+    update();
+  </script>
+</body>
+</html>

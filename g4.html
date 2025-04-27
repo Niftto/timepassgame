@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <title>Spicy War — Memory Order Game</title>
+  <style>
+body {
+      opacity: 0;
+      animation: fadeIn 1.5s ease-in forwards;
+    }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+      }
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(orange, #FF5722);
+      font-family: sans-serif;
+      text-align: center;
+      overflow: hidden;
+      height: 100%;
+    }
+    h1 {
+      color: white;
+      margin: 20px 0 10px;
+      font-size: 28px;
+    }
+    #gameArea {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: 20px;
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .emojiBtn {
+      font-size: 48px;
+      padding: 20px;
+      width: 80px;
+      height: 80px;
+      background: #FFF9C4;
+      border: 3px solid #FF9800;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: 0.3s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .emojiBtn.active {
+      background: red; /* Blink effect color */
+    }
+    #status {
+      color: white;
+      font-size: 20px;
+      margin: 10px;
+    }
+    #startBtn {
+      background: #03A9F4;
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      font-size: 20px;
+      border-radius: 20px;
+      cursor: pointer;
+      margin: 12px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 24px;
+      }
+      .emojiBtn {
+        font-size: 40px;
+        width: 70px;
+        height: 70px;
+      }
+      #startBtn {
+        font-size: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+ <br>
+ <br>
+ <br>
+ <br>
+  <h1>🌶️ Spicy War Memory Challenge 🌶️</h1>
+ <br>
+ <br>
+  <div id="status">Press Start to Begin!</div>
+<br>
+  <button id="startBtn">Start Game</button>
+
+  <div id="gameArea"></div>
+
+  <script>
+    const emojis = ["🌶️", "🥦", "🍋", "🍄", "🍗", "🥕"];
+    let sequence = [];
+    let playerInput = [];
+    let level = 0;
+    let acceptingInput = false;
+
+    const statusText = document.getElementById("status");
+    const gameArea = document.getElementById("gameArea");
+    const startBtn = document.getElementById("startBtn");
+
+    function setupButtons() {
+      gameArea.innerHTML = "";
+      emojis.forEach((emoji, index) => {
+        const btn = document.createElement("button");
+        btn.classList.add("emojiBtn");
+        btn.innerText = emoji;
+        btn.addEventListener("click", () => playerTap(index));
+        gameArea.appendChild(btn);
+      });
+    }
+
+    function startGame() {
+      sequence = [];
+      playerInput = [];
+      level = 0;
+      acceptingInput = false;
+      statusText.innerText = "Watch the order...";
+      nextRound();
+    }
+
+    function nextRound() {
+      level++;
+      statusText.innerText = `Level ${level}: Watch the order...`;
+      playerInput = [];
+      acceptingInput = false;
+
+      const nextEmoji = Math.floor(Math.random() * emojis.length);
+      sequence.push(nextEmoji);
+      playSequence();
+    }
+
+    function playSequence() {
+      let i = 0;
+      const buttons = document.querySelectorAll(".emojiBtn");
+      const interval = setInterval(() => {
+        buttons.forEach(btn => btn.classList.remove("active"));
+        if (i < sequence.length) {
+          buttons[sequence[i]].classList.add("active");
+          setTimeout(() => buttons[sequence[i]].classList.remove("active"), 400);
+          i++;
+        } else {
+          clearInterval(interval);
+          acceptingInput = true;
+          statusText.innerText = `Now it's your turn!`;
+        }
+      }, 700);
+    }
+
+    function playerTap(index) {
+      if (!acceptingInput) return;
+      playerInput.push(index);
+      const currentMoveIndex = playerInput.length - 1;
+
+      if (playerInput[currentMoveIndex] !== sequence[currentMoveIndex]) {
+        statusText.innerText = `Wrong order! You reached Level ${level}. Press Start to try again.`;
+        acceptingInput = false;
+        return;
+      }
+
+      if (playerInput.length === sequence.length) {
+        statusText.innerText = `Good job! Get ready for Level ${level + 1}...`;
+        acceptingInput = false;
+        setTimeout(nextRound, 1200);
+      }
+    }
+
+    startBtn.addEventListener("click", () => {
+      setupButtons();
+      startGame();
+    });
+
+    setupButtons();
+  </script>
+</body>
+</html>

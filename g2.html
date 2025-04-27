@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Spicy Guess the Flavor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+body {
+      opacity: 0;
+      animation: fadeIn 1.5s ease-in forwards;
+    }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+      }
+    }
+    body {
+      background-color: #ff7043;
+      color: white;
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+      padding: 10px;
+      margin: 0;
+    }
+    h1 {
+      font-size: 24px;
+      margin-top: 10px;
+    }
+    .dish {
+      font-size: 22px;
+      margin-top: 15px;
+    }
+    .question {
+      font-size: 18px;
+      margin-top: 10px;
+    }
+    .options {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 15px;
+    }
+    .option {
+      color: white;
+      font-size: 16px;
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      border: none;
+      background-color: #3f51b5;
+      flex: 1 1 calc(45% - 10px);
+      max-width: calc(45% - 10px);
+    }
+    .option:hover {
+      background-color: #d81b60;
+    }
+    .timer {
+      font-size: 20px;
+      margin-top: 15px;
+    }
+    #result {
+      font-size: 18px;
+      margin-top: 15px;
+    }
+    .confetti {
+      position: absolute;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 20px;
+      color: #ffeb3b;
+      animation: fall 2s ease-out forwards;
+    }
+    @keyframes fall {
+      0% { transform: translateY(-10%); opacity: 1; }
+      100% { transform: translateY(100%); opacity: 0; }
+    }
+    .button {
+      background-color: #e91e63;
+      color: white;
+      font-size: 18px;
+      padding: 10px 15px;
+      margin: 20px auto 0;
+      border-radius: 8px;
+      cursor: pointer;
+      border: none;
+      display: block;
+    }
+    .button:hover {
+      background-color: #d81b60;
+    }
+    a {
+      text-decoration: none;
+      color: white;
+    }
+    .back-button {
+      font-size: 16px;
+      background-color: #ff5722;
+      padding: 8px 12px;
+      border-radius: 5px;
+      margin-top: 20px;
+      display: inline-block;
+    }
+    .back-button:hover {
+      background-color: #d84315;
+    }
+    #score {
+      font-size: 20px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+ <br>
+ <br>
+ <br>
+ <br>
+ <br>
+  <h1>Spicy Flavor Quiz</h1>
+ <br>
+ <br>
+<br>
+  <div class="dish" id="dish-name"></div>
+<br>
+  <div class="question" id="question"></div>
+  <div class="options" id="options"></div>
+  <div id="timer" class="timer">Time left: 15s</div>
+  <div id="result"></div>
+  <button class="button" id="next-question-button" style="display: none;" onclick="nextQuestion()">Next</button>
+  <a href="#"><div class="back-button">Back</div></a>
+  <div id="score" style="display:none;"></div>
+
+  <script>
+    let timeLeft = 15;
+    let currentAnswer = '';
+    let timer;
+    let score = 0;
+    let questionsAsked = 0;
+
+    const questions = [
+      { dishName: 'Spicy Chili', correctAnswer: 'Chili', text: 'Key ingredient?', options: ['Chili', 'Garlic', 'Curry', 'Paprika'] },
+      { dishName: 'Garlic Chicken', correctAnswer: 'Garlic', text: 'Key ingredient?', options: ['Garlic', 'Chili', 'Curry', 'Turmeric'] },
+      { dishName: 'Curry Delight', correctAnswer: 'Curry', text: 'Key ingredient?', options: ['Curry', 'Garlic', 'Chili', 'Rice'] },
+      { dishName: 'Goulash', correctAnswer: 'Paprika', text: 'Key ingredient?', options: ['Paprika', 'Chili', 'Garlic', 'Meat'] },
+      { dishName: 'Biryani', correctAnswer: 'India', text: 'Origin country?', options: ['India', 'Pakistan', 'Nepal', 'Bangladesh'] },
+      { dishName: 'Sushi', correctAnswer: 'Japan', text: 'Origin country?', options: ['China', 'Japan', 'Thailand', 'Vietnam'] },
+      { dishName: 'Pizza', correctAnswer: 'Italy', text: 'Origin country?', options: ['Italy', 'USA', 'France', 'Spain'] },
+      { dishName: 'Kimchi', correctAnswer: 'Korea', text: 'Origin country?', options: ['China', 'Japan', 'Korea', 'Vietnam'] },
+      { dishName: 'Fried Rice', correctAnswer: 'Rice', text: 'Key ingredient?', options: ['Rice', 'Noodles', 'Garlic', 'Egg'] },
+      { dishName: 'Kebabs', correctAnswer: 'Meat', text: 'Key ingredient?', options: ['Meat', 'Vegetables', 'Rice', 'Fish'] }
+    ];
+
+    function startGame() {
+      score = 0;
+      questionsAsked = 0;
+      nextQuestion();
+    }
+
+    function nextQuestion() {
+      if (questionsAsked >= 10) {
+        showScore();
+        return;
+      }
+      timeLeft = 15;
+      document.getElementById('timer').innerText = `Time left: ${timeLeft}s`;
+      document.getElementById('result').innerText = '';
+      document.getElementById('next-question-button').style.display = 'none';
+
+      const question = questions[Math.floor(Math.random() * questions.length)];
+      document.getElementById('dish-name').innerText = question.dishName;
+      document.getElementById('question').innerText = question.text;
+      currentAnswer = question.correctAnswer.toLowerCase();
+
+      const optionsHTML = question.options.map(opt =>
+        `<button class="option" onclick="checkAnswer('${opt.toLowerCase()}')">${opt}</button>`
+      ).join('');
+      document.getElementById('options').innerHTML = optionsHTML;
+
+      startTimer();
+      questionsAsked++;
+    }
+
+    function startTimer() {
+      clearInterval(timer);
+      timer = setInterval(() => {
+        timeLeft--;
+        document.getElementById('timer').innerText = `Time left: ${timeLeft}s`;
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          document.getElementById('result').innerText = `Time's up! Answer: ${currentAnswer}`;
+          showNextButton();
+        }
+      }, 1000);
+    }
+
+    function checkAnswer(answer) {
+      clearInterval(timer);
+      if (answer === currentAnswer) {
+        score++;
+        document.getElementById('result').innerText = 'Correct!';
+        showConfetti();
+      } else {
+        document.getElementById('result').innerText = `Wrong. It was: ${currentAnswer}`;
+      }
+      showNextButton();
+    }
+
+    function showNextButton() {
+      document.getElementById('next-question-button').style.display = 'block';
+    }
+
+    function showConfetti() {
+      for (let i = 0; i < 15; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + '%';
+        document.body.appendChild(confetti);
+        setTimeout(() => confetti.remove(), 2000);
+      }
+    }
+
+    function showScore() {
+      document.getElementById('score').style.display = 'block';
+      document.getElementById('score').innerText = `Score: ${score}/10`;
+      document.getElementById('options').innerHTML = '';
+      document.getElementById('dish-name').innerText = '';
+      document.getElementById('question').innerText = 'Game Over!';
+      document.getElementById('timer').innerText = '';
+      document.getElementById('next-question-button').style.display = 'none';
+    }
+
+    startGame();
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <title>Chilli Jump Dash!</title>
+  <style>
+body {
+      opacity: 0;
+      animation: fadeIn 1.5s ease-in forwards;
+    }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+      }
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(#FF9800, #FF5722);
+      font-family: sans-serif;
+      color: white;
+      overflow: hidden;
+      height: 100%;
+    }
+    #controls {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px;
+      background: rgba(0,0,0,0.3);
+      z-index: 10;
+    }
+    button {
+      background: #03A9F4;
+      color: white;
+      border: none;
+      padding: 12px 18px;
+      font-size: 18px;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    canvas {
+      display: block;
+      margin-top: 60px;
+      border: 4px solid #F44336;
+      border-radius: 12px;
+      background: #FFD54F;
+    }
+    #scoreboard {
+      position: fixed;
+      bottom: 10px;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      background: rgba(0,0,0,0.3);
+      padding: 6px 0;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="controls">
+    <button id="jumpBtn">🌶️ JUMP</button>
+    <button id="restartBtn">🔄 Restart</button>
+  </div>
+
+  <canvas id="gameCanvas"></canvas>
+
+  <div id="scoreboard">
+    <span id="score">Time: 0</span> | 
+    <span id="avoided">Avoided: 0</span>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight - 120;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    let chilli, groundY, obstacles, gravity, jumpPower, timeScore, avoidedScore, gameSpeed, isGameOver;
+
+    function startGame() {
+      groundY = canvas.height - 60;
+      chilli = { x: 50, y: groundY, size: 40, vy: 0, jumping: false };
+      obstacles = [];
+      gravity = 0.7;
+      jumpPower = -15;
+      timeScore = 0;
+      avoidedScore = 0;
+      gameSpeed = 4;
+      isGameOver = false;
+      document.getElementById("score").innerText = "Time: 0";
+      document.getElementById("avoided").innerText = "Avoided: 0";
+      requestAnimationFrame(update);
+    }
+
+    function createObstacle() {
+      let height = Math.random() * 30 + 30;
+      let color = ["#E91E63", "#3F51B5", "#4CAF50", "#FFC107"][Math.floor(Math.random() * 4)];
+      obstacles.push({
+        x: canvas.width,
+        y: groundY,
+        width: Math.random() * 20 + 20,
+        height: height,
+        color: color,
+        counted: false
+      });
+    }
+
+    function update() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Ground
+      ctx.fillStyle = "#FFEB3B";
+      ctx.fillRect(0, groundY + 40, canvas.width, 40);
+      ctx.fillStyle = "#795548";
+      ctx.fillRect(0, groundY + 40, canvas.width, 10);
+
+      // Chilli physics
+      chilli.vy += gravity;
+      chilli.y += chilli.vy;
+
+      if (chilli.y >= groundY) {
+        chilli.y = groundY;
+        chilli.vy = 0;
+        chilli.jumping = false;
+      }
+
+      // Draw Chilli
+      ctx.font = "40px sans-serif";
+      ctx.fillText("🌶️", chilli.x, chilli.y);
+
+      // Obstacles
+      for (let i = 0; i < obstacles.length; i++) {
+        obstacles[i].x -= gameSpeed;
+        ctx.fillStyle = obstacles[i].color;
+        ctx.fillRect(obstacles[i].x, obstacles[i].y - obstacles[i].height, obstacles[i].width, obstacles[i].height);
+
+        if (
+          chilli.x + chilli.size - 10 > obstacles[i].x &&
+          chilli.x < obstacles[i].x + obstacles[i].width &&
+          chilli.y + 10 >= obstacles[i].y - obstacles[i].height
+        ) {
+          isGameOver = true;
+        }
+
+        if (!obstacles[i].counted && obstacles[i].x + obstacles[i].width < chilli.x) {
+          avoidedScore++;
+          obstacles[i].counted = true;
+          document.getElementById("avoided").innerText = `Avoided: ${avoidedScore}`;
+        }
+      }
+
+      obstacles = obstacles.filter(o => o.x + o.width > 0);
+
+      // Control obstacle spacing — prevent near spawning
+      if (obstacles.length === 0 || (obstacles[obstacles.length - 1].x < canvas.width - 200)) {
+        if (Math.random() < 0.015) {
+          createObstacle();
+        }
+      }
+
+      timeScore++;
+      document.getElementById("score").innerText = `Time: ${timeScore}`;
+
+      if (isGameOver) {
+        ctx.font = "28px sans-serif";
+        ctx.fillStyle = "white";
+        ctx.fillText("GAME OVER", canvas.width / 2 - 80, canvas.height / 2);
+        return;
+      }
+
+      requestAnimationFrame(update);
+    }
+
+    function jumpChilli() {
+      if (!chilli.jumping) {
+        chilli.vy = jumpPower;
+        chilli.jumping = true;
+      }
+    }
+
+    document.getElementById("jumpBtn").addEventListener("click", jumpChilli);
+    document.getElementById("restartBtn").addEventListener("click", startGame);
+
+    startGame();
+  </script>
+</body>
+</html>
